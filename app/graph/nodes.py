@@ -11,6 +11,9 @@ from app.graph.state import UnderwritingState
 from app.services.firecrawl import FirecrawlService
 from app.services.llm import AzureOpenAIService
 from app.services.tavily import TavilySearchService
+from app.core.guardrails import (
+    validate_search_queries, validate_evidence, validate_report
+)
 
 settings = get_settings()
 
@@ -23,7 +26,7 @@ async def build_search_queries(
     state: UnderwritingState,
 ) -> UnderwritingState:
     """
-    Build research queries for the supplied underwriting questions.
+    Build and validate research queries for the supplied underwriting questions.
 
     The number of queries executed is controlled separately by
     max_search_queries in application settings.
@@ -42,9 +45,13 @@ async def build_search_queries(
             f"{question}"
         )
 
+    validated_queries = validate_search_queries(
+        queries
+    )
+
     return {
         **state,
-        "search_queries": queries,
+        "search_queries": validated_queries,
     }
 
 
@@ -137,9 +144,13 @@ async def extract_evidence(
                 f"{result.url}: {exc}"
             )
 
+    validated_evidence = validate_evidence(
+        evidence
+    )
+
     return {
         **state,
-        "evidence": evidence,
+        "evidence": validated_evidence,
         "errors": errors,
     }
 
@@ -185,7 +196,13 @@ async def synthesize_underwriting_report(
         ),
     )
 
+    validated_report = validate_report(
+        report,
+        state.get("evidence", []),
+    )
+
     return {
         **state,
-        "report": report,
+        "insights": validated_report.insights,
+        "report": validated_report,
     }

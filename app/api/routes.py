@@ -1,4 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from app.core.guardrails import (
+    GuardrailViolation,
+    validate_underwriting_input,
+)
 
 from app.domain.schemas import UnderwritingRequest
 
@@ -14,15 +18,28 @@ router = APIRouter()
 async def underwrite(
     request: UnderwritingRequest,
 ) :
-    initial_state = create_initial_state(
-        account_name=request.account_name,
-        address=request.address,
-        underwriting_type=request.type,
-        underwriting_questions=request.underwriting_questions,
-    )
+    try:
+        validate_underwriting_input(
+            account_name=request.account_name,
+            address=request.address,
+            questions=request.underwriting_questions,
+        )
 
-    final_state  = await underwriting_graph.ainvoke(
-        initial_state
-    )
+        initial_state = create_initial_state(
+            account_name=request.account_name,
+            address=request.address,
+            underwriting_type=request.type,
+            underwriting_questions=request.underwriting_questions,
+        )
 
-    return final_state["report"]
+        final_state  = await underwriting_graph.ainvoke(
+            initial_state
+        )
+
+        return final_state["report"]
+
+    except GuardrailViolation as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
