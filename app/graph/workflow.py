@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from langgraph.graph import END, START, StateGraph
 
 from app.graph.nodes import (
@@ -61,3 +63,27 @@ def build_underwriting_graph():
 
 
 underwriting_graph = build_underwriting_graph()
+
+def create_initial_state(
+    *,
+    account_name: str,
+    address: str,
+    underwriting_type,
+    underwriting_questions: list[str],
+) -> UnderwritingState:
+    """
+    Create the initial state for one underwriting execution.
+    """
+
+    return UnderwritingState(
+        execution_id=str(uuid4()),
+        account_name=account_name,
+        address=address,
+        type=underwriting_type,
+        underwriting_questions=underwriting_questions,
+        search_queries=[],
+        search_results=[],
+        evidence=[],
+        insights=[],
+        errors=[],
+    )

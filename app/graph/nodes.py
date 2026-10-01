@@ -12,11 +12,11 @@ from app.services.firecrawl import FirecrawlService
 from app.services.llm import AzureOpenAIService
 from app.services.tavily import TavilySearchService
 
+settings = get_settings()
 
 tavily_service = TavilySearchService()
 firecrawl_service = FirecrawlService()
 llm_service = AzureOpenAIService()
-settings = get_settings()
 
 
 async def build_search_queries(
@@ -64,7 +64,7 @@ async def discover_web_sources(
         : settings.max_search_queries
     ]
 
-    results = []
+    search_results = []
 
     for query in limited_queries:
         search_results = await tavily_service.search(
@@ -73,11 +73,11 @@ async def discover_web_sources(
             question=query,
         )
 
-        results.extend(search_results)
+        search_results.extend(search_results)
 
     return {
         **state,
-        "search_results": results,
+        "search_results": search_results,
     }
 
 
@@ -99,6 +99,9 @@ async def extract_evidence(
         : settings.max_sources_to_scrape
     ]
 
+    evidence: list[Evidence] = []
+    errors = list(state.get("errors", []))
+
     for result in limited_results:
         try:
             extracted_result = await firecrawl_service.scrape(
@@ -109,6 +112,9 @@ async def extract_evidence(
                 extracted_result.extraction_status != "success"
                 or not extracted_result.content
             ):
+                errors.append(
+                    f"Failed to extract source: {result.url}"
+                )
                 continue
 
             evidence.append(
@@ -126,15 +132,15 @@ async def extract_evidence(
             )
 
         except Exception as exc:
-            print(
-                "Firecrawl extraction failed",
-                str(result.url),
-                exc,
+            errors.append(
+                f"Firecrawl extraction failed for "
+                f"{result.url}: {exc}"
             )
 
     return {
         **state,
         "evidence": evidence,
+        "errors": errors,
     }
 
 
