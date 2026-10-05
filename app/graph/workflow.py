@@ -77,6 +77,7 @@ def create_initial_state(
 
     return UnderwritingState(
         execution_id=str(uuid4()),
+        execution_status="pending",
         account_name=account_name,
         address=address,
         type=underwriting_type,
@@ -85,5 +86,6 @@ def create_initial_state(
         search_results=[],
         evidence=[],
         insights=[],
+        report=None,
         errors=[],
     )

@@ -98,8 +98,6 @@ async def extract_evidence(
     settings.max_sources_to_scrape.
     """
 
-    evidence: list[Evidence] = []
-
     search_results = state.get("search_results", [])
 
     limited_results = search_results[
@@ -163,6 +161,17 @@ async def synthesize_underwriting_report(
     underwriting intelligence.
     """
 
+    if not state.get("evidence"):
+        return {
+            **state,
+            "errors": [
+                *state.get("errors", []),
+                "No usable evidence was collected.",
+            ],
+            "execution_status": "failed",
+            "report": None,
+        }
+
     report_data = await llm_service.generate_report(
         account_name=state["account_name"],
         address=state["address"],
@@ -196,13 +205,18 @@ async def synthesize_underwriting_report(
         ),
     )
 
-    validated_report = validate_report(
+    report = validate_report(
         report,
         state.get("evidence", []),
     )
 
     return {
         **state,
-        "insights": validated_report.insights,
-        "report": validated_report,
+        "insights": report.insights,
+        "report": report,
+        "execution_status": (
+            "completed_with_errors"
+            if state.get("errors")
+            else "completed"
+        ),
     }

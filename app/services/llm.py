@@ -6,6 +6,7 @@ from openai import OpenAI
 
 from app.core.config import get_settings
 from app.domain.schemas import Evidence
+from app.core.recovery import retry_async
 
 
 class AzureOpenAIService:
@@ -62,9 +63,15 @@ class AzureOpenAIService:
             evidence=evidence_payload,
         )
 
-        response = await asyncio.to_thread(
-            self._generate,
-            prompt,
+        async def execute_generation():
+            return await asyncio.to_thread(
+                self._generate,
+                prompt,
+            )
+
+        response = await retry_async(
+            execute_generation,
+            operation_name="azure_openai_generation",
         )
 
         content = response.output_text

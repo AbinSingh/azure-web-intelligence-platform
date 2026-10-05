@@ -52,6 +52,31 @@ class Settings(BaseSettings):
     max_information_gaps: int = 20
     max_follow_up_questions: int = 20
 
+    # Recovery controls
+    provider_timeout_seconds: float = Field(
+        default=30.0,
+        ge=1.0,
+        le=300.0,
+    )
+
+    max_provider_retries: int = Field(
+        default=2,
+        ge=0,
+        le=5,
+    )
+
+    retry_min_wait_seconds: float = Field(
+        default=1.0,
+        ge=0.1,
+        le=30.0,
+    )
+
+    retry_max_wait_seconds: float = Field(
+        default=8.0,
+        ge=1.0,
+        le=120.0,
+    )
+
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
         case_sensitive=False,

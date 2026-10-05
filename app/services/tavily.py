@@ -3,6 +3,7 @@ from typing import Any
 from tavily import AsyncTavilyClient
 
 from app.core.config import get_settings
+from app.core.recovery import retry_async
 from app.domain.schemas import SearchResult
 
 
@@ -35,12 +36,18 @@ class TavilySearchService:
             f'"{question}"'
         )
 
-        response = await self.client.search(
-            query=query,
-            search_depth="advanced",
-            max_results=self.max_search_results,
-            include_answer=False,
-            include_raw_content=False,
+        async def execute_search():
+            return await self.client.search(
+                query=query,
+                search_depth="advanced",
+                max_results=self.max_search_results,
+                include_answer=False,
+                include_raw_content=False,
+            )
+
+        response = await retry_async(
+            execute_search,
+            operation_name="tavily_search",
         )
 
         results: list[SearchResult] = []

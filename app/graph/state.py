@@ -1,5 +1,5 @@
 
-from typing import TypedDict
+from typing import TypedDict, Literal
 
 from app.domain.schemas import (
     Evidence,
@@ -9,6 +9,13 @@ from app.domain.schemas import (
     UnderwritingType,
 )
 
+ExecutionStatus = Literal[
+    "pending",
+    "running",
+    "completed",
+    "completed_with_errors",
+    "failed",
+]
 
 class UnderwritingState(TypedDict, total=False):
     """
@@ -48,10 +55,11 @@ class UnderwritingState(TypedDict, total=False):
     # ------------------------------------------------------------------
     # Final output
     # ------------------------------------------------------------------
-    report: UnderwritingReport
+    report: UnderwritingReport | None
 
     # ------------------------------------------------------------------
     # Execution metadata
     # ------------------------------------------------------------------
     execution_id: str
+    execution_status: ExecutionStatus
     errors: list[str]

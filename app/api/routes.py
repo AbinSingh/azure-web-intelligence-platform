@@ -36,6 +36,23 @@ async def underwrite(
             initial_state
         )
 
+        if not final_state.get("report"):
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "message": (
+                        "Underwriting research could not produce usable evidence."
+                    ),
+                    "execution_id": final_state.get(
+                        "execution_id"
+                    ),
+                    "errors": final_state.get(
+                        "errors",
+                        [],
+                    ),
+                },
+            )
+
         return final_state["report"]
 
     except GuardrailViolation as exc:

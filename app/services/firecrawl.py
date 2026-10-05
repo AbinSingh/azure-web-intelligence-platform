@@ -1,6 +1,7 @@
 from firecrawl import AsyncFirecrawl
 
 from app.core.config import get_settings
+from app.core.recovery import retry_async
 from app.domain.schemas import SearchResult
 
 
@@ -25,9 +26,15 @@ class FirecrawlService:
         Extract page content from a discovered URL.
         """
 
-        document = await self.client.scrape(
-            str(result.url),
-            formats=["markdown"],
+        async def execute_scrape():
+            return await self.client.scrape(
+                str(result.url),
+                formats=["markdown"],
+            )
+
+        document = await retry_async(
+            execute_scrape,
+            operation_name="firecrawl_scrape",
         )
 
         markdown = getattr(document, "markdown", None) or ""
