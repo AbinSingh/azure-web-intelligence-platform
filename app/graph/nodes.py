@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.core.config import get_settings
-from app.domain.schemas import (
+from app.domain.schemas import (SearchResult,
     Evidence,
     UnderwritingInsight,
     UnderwritingReport,
@@ -84,7 +84,10 @@ async def discover_web_sources(
 
     return {
         **state,
-        "search_results": search_results,
+        "search_results": [
+            result.model_dump(mode="json")
+            for result in search_results
+        ],
     }
 
 
@@ -107,7 +110,9 @@ async def extract_evidence(
     evidence: list[Evidence] = []
     errors = list(state.get("errors", []))
 
-    for result in limited_results:
+    for result_data in limited_results:
+        result = SearchResult.model_validate(result_data)
+
         try:
             extracted_result = await firecrawl_service.scrape(
                 result
@@ -148,10 +153,12 @@ async def extract_evidence(
 
     return {
         **state,
-        "evidence": validated_evidence,
+        "evidence": [
+            item.model_dump(mode="json")
+            for item in validated_evidence
+        ],
         "errors": errors,
     }
-
 
 async def synthesize_underwriting_report(
     state: UnderwritingState,
@@ -172,12 +179,17 @@ async def synthesize_underwriting_report(
             "report": None,
         }
 
+    evidence = [
+        Evidence.model_validate(item)
+        for item in state.get("evidence", [])
+    ]
+
     report_data = await llm_service.generate_report(
         account_name=state["account_name"],
         address=state["address"],
         underwriting_type=state["type"],
         questions=state["underwriting_questions"],
-        evidence=state.get("evidence", []),
+        evidence=evidence,
     )
 
     report = UnderwritingReport(
@@ -205,15 +217,23 @@ async def synthesize_underwriting_report(
         ),
     )
 
+    evidence = [
+        Evidence.model_validate(item)
+        for item in state.get("evidence", [])
+    ]
+
     report = validate_report(
         report,
-        state.get("evidence", []),
+        evidence,
     )
 
     return {
         **state,
-        "insights": report.insights,
-        "report": report,
+        "insights": [
+        insight.model_dump(mode="json")
+        for insight in report.insights
+    ],
+        "report": report.model_dump(mode="json"),
         "execution_status": (
             "completed_with_errors"
             if state.get("errors")

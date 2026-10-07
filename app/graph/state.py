@@ -1,5 +1,5 @@
 
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, Any
 
 from app.domain.schemas import (
     Evidence,
@@ -29,7 +29,7 @@ class UnderwritingState(TypedDict, total=False):
     # ------------------------------------------------------------------
     account_name: str
     address: str
-    type: UnderwritingType
+    type: str
     underwriting_questions: list[str]
 
     # ------------------------------------------------------------------
@@ -40,22 +40,22 @@ class UnderwritingState(TypedDict, total=False):
     # ------------------------------------------------------------------
     # Discovery
     # ------------------------------------------------------------------
-    search_results: list[SearchResult]
+    search_results: list[dict[str, Any]]
 
     # ------------------------------------------------------------------
     # Evidence
     # ------------------------------------------------------------------
-    evidence: list[Evidence]
+    evidence: list[dict[str, Any]]
 
     # ------------------------------------------------------------------
     # Analysis
     # ------------------------------------------------------------------
-    insights: list[UnderwritingInsight]
+    insights: list[dict[str, Any]]
 
     # ------------------------------------------------------------------
     # Final output
     # ------------------------------------------------------------------
-    report: UnderwritingReport | None
+    report: dict[str, Any] | None
 
     # ------------------------------------------------------------------
     # Execution metadata

@@ -11,7 +11,7 @@ from app.graph.nodes import (
 from app.graph.state import UnderwritingState
 
 
-def build_underwriting_graph():
+def build_underwriting_graph(*, checkpointer):
     graph = StateGraph(UnderwritingState)
 
     graph.add_node(
@@ -59,10 +59,8 @@ def build_underwriting_graph():
         END,
     )
 
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)
 
-
-underwriting_graph = build_underwriting_graph()
 
 def create_initial_state(
     *,

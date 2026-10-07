@@ -2,14 +2,28 @@ from fastapi import FastAPI
 from app.api.routes import router
 from app.core.config import get_settings
 from app.infrastructure.logging import configure_logging
+from contextlib import asynccontextmanager
+from app.infrastructure.checkpointer import create_checkpointer
+from app.graph.workflow import build_underwriting_graph
 
 settings = get_settings()
 configure_logging(settings.log_level)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with create_checkpointer() as checkpointer:
+        app.state.checkpointer = checkpointer
+
+        # Build graph using this checkpointer.
+        app.state.underwriting_graph = build_underwriting_graph(
+            checkpointer=checkpointer,
+        )
+
+        yield
+
 app = FastAPI(
     title="Property Underwriting Web Intelligence API",
-    version="0.1.0",
-    description="Agentic web research and evidence synthesis for property underwriting.",
+    lifespan=lifespan,
 )
 app.include_router(router)
 
