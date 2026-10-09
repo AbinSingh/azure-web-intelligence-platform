@@ -14,6 +14,7 @@ from app.services.tavily import TavilySearchService
 from app.core.guardrails import (
     validate_search_queries, validate_evidence, validate_report
 )
+from app.observability.tracing import trace_node
 
 settings = get_settings()
 
@@ -21,7 +22,7 @@ tavily_service = TavilySearchService()
 firecrawl_service = FirecrawlService()
 llm_service = AzureOpenAIService()
 
-
+@trace_node("build_search_queries")
 async def build_search_queries(
     state: UnderwritingState,
 ) -> UnderwritingState:
@@ -54,7 +55,7 @@ async def build_search_queries(
         "search_queries": validated_queries,
     }
 
-
+@trace_node("discover_web_sources")
 async def discover_web_sources(
     state: UnderwritingState,
 ) -> UnderwritingState:
@@ -90,7 +91,7 @@ async def discover_web_sources(
         ],
     }
 
-
+@trace_node("extract_evidence")
 async def extract_evidence(
     state: UnderwritingState,
 ) -> UnderwritingState:
@@ -160,6 +161,7 @@ async def extract_evidence(
         "errors": errors,
     }
 
+@trace_node("synthesize_underwriting_report")
 async def synthesize_underwriting_report(
     state: UnderwritingState,
 ) -> UnderwritingState:

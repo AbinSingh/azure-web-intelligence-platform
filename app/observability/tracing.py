@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Callable, TypeVar
 
 from opentelemetry import trace
 from opentelemetry.trace import Span, Status, StatusCode
+from functools import wraps
+
+F = TypeVar("F", bound=Callable)
 
 tracer = trace.get_tracer(
     "underwriting-intelligence-agent"
@@ -60,3 +63,66 @@ def record_event(
         event_name,
         attributes=attributes or {},
     )
+
+def trace_node(node_name: str):
+    """
+    Decorate a synchronous or asynchronous LangGraph node
+    without changing its input or output contract.
+    """
+    def decorator(func: F) -> F:
+        if getattr(func, "__observability_traced__", False):
+            return func
+
+        if __import__("inspect").iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(state, *args, **kwargs):
+                execution_id = state.get("execution_id")
+
+                attributes = {}
+
+                if execution_id:
+                    attributes["underwriting.execution_id"] = (
+                        execution_id
+                    )
+
+                with trace_operation(
+                    f"langgraph.node.{node_name}",
+                    attributes=attributes,
+                ):
+                    result = await func(
+                        state,
+                        *args,
+                        **kwargs,
+                    )
+
+                    return result
+
+            async_wrapper.__observability_traced__ = True
+            return async_wrapper  # type: ignore[return-value]
+
+        @wraps(func)
+        def sync_wrapper(state, *args, **kwargs):
+            execution_id = state.get("execution_id")
+
+            attributes = {}
+
+            if execution_id:
+                attributes["underwriting.execution_id"] = (
+                    execution_id
+                )
+
+            with trace_operation(
+                f"langgraph.node.{node_name}",
+                attributes=attributes,
+            ):
+                return func(
+                    state,
+                    *args,
+                    **kwargs,
+                )
+
+        sync_wrapper.__observability_traced__ = True
+        return sync_wrapper  # type: ignore[return-value]
+
+    return decorator
