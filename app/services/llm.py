@@ -7,6 +7,7 @@ from openai import OpenAI
 from app.core.config import get_settings
 from app.domain.schemas import Evidence
 from app.core.recovery import retry_async
+from app.observability.tracing import trace_operation
 
 
 class AzureOpenAIService:
@@ -69,10 +70,17 @@ class AzureOpenAIService:
                 prompt,
             )
 
-        response = await retry_async(
-            execute_generation,
-            operation_name="azure_openai_generation",
-        )
+        with trace_operation(
+                "azure_openai.generate",
+                attributes={
+                    "provider.name": "azure_openai",
+                    "gen_ai.operation.name": "chat",
+                },
+        ) as span:
+            response = await retry_async(
+                execute_generation,
+                operation_name="azure_openai_generation",
+            )
 
         content = response.output_text
 

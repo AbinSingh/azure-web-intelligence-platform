@@ -5,6 +5,7 @@ from tavily import AsyncTavilyClient
 from app.core.config import get_settings
 from app.core.recovery import retry_async
 from app.domain.schemas import SearchResult
+from app.observability.tracing import trace_operation
 
 
 class TavilySearchService:
@@ -45,10 +46,21 @@ class TavilySearchService:
                 include_raw_content=False,
             )
 
-        response = await retry_async(
-            execute_search,
-            operation_name="tavily_search",
-        )
+        with trace_operation(
+                "tavily.search",
+                attributes={
+                    "provider.name": "tavily",
+                },
+        ) as span:
+            response = await retry_async(
+                execute_search,
+                operation_name="tavily_search",
+            )
+
+            span.set_attribute(
+                "tavily.result_count",
+                len(response.get("results", [])),
+            )
 
         results: list[SearchResult] = []
 

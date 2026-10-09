@@ -3,6 +3,7 @@ from firecrawl import AsyncFirecrawl
 from app.core.config import get_settings
 from app.core.recovery import retry_async
 from app.domain.schemas import SearchResult
+from app.observability.tracing import trace_operation
 
 
 class FirecrawlService:
@@ -32,12 +33,23 @@ class FirecrawlService:
                 formats=["markdown"],
             )
 
-        document = await retry_async(
-            execute_scrape,
-            operation_name="firecrawl_scrape",
-        )
+        with trace_operation(
+                "firecrawl.scrape",
+                attributes={
+                    "provider.name": "firecrawl",
+                },
+        ) as span:
+            document = await retry_async(
+                execute_scrape,
+                operation_name="firecrawl_scrape",
+            )
 
-        markdown = getattr(document, "markdown", None) or ""
+            markdown = getattr(document, "markdown", None) or ""
+
+            span.set_attribute(
+                "firecrawl.extracted_content_chars",
+                len(markdown),
+            )
 
         return result.model_copy(
             update={
