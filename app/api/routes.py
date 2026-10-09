@@ -9,6 +9,7 @@ from app.domain.schemas import UnderwritingRequest
 from app.graph.workflow import(
     create_initial_state
 )
+from app.observability.tracing import trace_operation
 
 router = APIRouter()
 
@@ -40,10 +41,35 @@ async def underwrite(
 
         graph = http_request.app.state.underwriting_graph
 
-        final_state = await graph.ainvoke(
-            initial_state,
-            config=config,
-        )
+        with trace_operation(
+                "underwriting.execute",
+                attributes={
+                    "underwriting.execution_id": initial_state["execution_id"],
+                    "underwriting.type": initial_state["type"],
+                },
+        ) as span:
+            final_state = await graph.ainvoke(
+                initial_state,
+                config=config,
+            )
+
+            span.set_attribute(
+                "underwriting.execution.status",
+                final_state.get(
+                    "execution_status",
+                    "unknown",
+                ),
+            )
+
+            span.set_attribute(
+                "underwriting.evidence.count",
+                len(final_state.get("evidence", [])),
+            )
+
+            span.set_attribute(
+                "underwriting.error.count",
+                len(final_state.get("errors", [])),
+            )
 
         if not final_state.get("report"):
             raise HTTPException(
