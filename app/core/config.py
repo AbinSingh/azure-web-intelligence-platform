@@ -83,6 +83,16 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # Observability
+
+    otel_enabled: bool = True
+
+    otel_service_name: str = "underwriting-intelligence-agent"
+
+    applicationinsights_connection_string: str | None = Field(
+        default=None,
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:
