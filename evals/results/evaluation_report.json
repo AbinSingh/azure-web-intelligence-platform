@@ -1,0 +1,75 @@
+{
+  "dataset": "evals\\datasets\\underwriting_cases.json",
+  "total_cases": 3,
+  "passed_cases": 0,
+  "failed_cases": 3,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "case_id": "property_001",
+      "passed": false,
+      "search": {
+        "expected_url_count": 1,
+        "retrieved_url_count": 1,
+        "matched_url_count": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "matched_urls": [
+          "https://example.com/property-001/flood"
+        ],
+        "missing_urls": []
+      },
+      "scrape": {
+        "total_sources": 1,
+        "total_facts": 2,
+        "supported_facts": 0,
+        "pass_rate": 0.0,
+        "results": [
+          {
+            "total_facts": 2,
+            "supported_facts": 0,
+            "pass_rate": 0.0,
+            "results": [
+              {
+                "fact": "The source identifies whether the property is in a designated flood zone.",
+                "supported": false,
+                "reason": "The extracted webpage content does not contain any information regarding whether the property is in a designated flood zone."
+              },
+              {
+                "fact": "The source identifies the applicable flood-zone classification.",
+                "supported": false,
+                "reason": "The extracted webpage content does not mention any flood-zone classification or related details."
+              }
+            ],
+            "url": "https://example.com/property-001/flood"
+          }
+        ]
+      },
+      "final_output": {
+        "question_count": 1,
+        "correct_count": 1,
+        "accuracy": 1.0,
+        "results": [
+          {
+            "question_id": "q1",
+            "passed": true,
+            "precision": null,
+            "recall": null,
+            "f1": null
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "property_002",
+      "passed": false,
+      "error": "Missing evaluation input."
+    },
+    {
+      "case_id": "property_003",
+      "passed": false,
+      "error": "Missing evaluation input."
+    }
+  ]
+}

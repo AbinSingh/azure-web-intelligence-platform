@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "property_001",
+    "search_returned_urls": [
+      "https://example.com/property-001/flood"
+    ],
+    "scrape_results": [
+      {
+        "url": "https://example.com/property-001/flood",
+        "extracted_content": "Saved extracted webpage content goes here."
+      }
+    ],
+    "actual_answers": [
+      {
+        "question_id": "q1",
+        "answer": "yes"
+      }
+    ]
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "case_id": "property_001",
+    "description": "Flood-zone assessment",
+    "search_ground_truth_urls": [
+      "https://example.com/property-001/flood"
+    ],
+    "scrape_ground_truth": [
+      {
+        "url": "https://example.com/property-001/flood",
+        "expected_facts": [
+          "The source identifies whether the property is in a designated flood zone.",
+          "The source identifies the applicable flood-zone classification."
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "question_id": "q1",
+        "question": "Is the property in a designated flood zone?",
+        "answer_type": "yes_no",
+        "expected_answer": "yes"
+      }
+    ]
+  },
+  {
+    "case_id": "property_002",
+    "description": "Environmental risk assessment",
+    "search_ground_truth_urls": [
+      "https://example.com/property-002/environment"
+    ],
+    "scrape_ground_truth": [
+      {
+        "url": "https://example.com/property-002/environment",
+        "expected_facts": [
+          "The source identifies whether an environmental hazard is reported.",
+          "The source identifies the location or status of the reported hazard."
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "question_id": "q1",
+        "question": "Is an environmental hazard reported?",
+        "answer_type": "yes_no",
+        "expected_answer": "no"
+      }
+    ]
+  },
+  {
+    "case_id": "property_003",
+    "description": "Property risk classification",
+    "search_ground_truth_urls": [
+      "https://example.com/property-003/risk"
+    ],
+    "scrape_ground_truth": [
+      {
+        "url": "https://example.com/property-003/risk",
+        "expected_facts": [
+          "The source describes the property's relevant risk characteristics.",
+          "The source provides information supporting the applicable risk classification."
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "question_id": "q1",
+        "question": "Which risk categories apply?",
+        "answer_type": "pick_list",
+        "expected_answer": [
+          "flood",
+          "environmental"
+        ]
+      }
+    ]
+  }
+]
